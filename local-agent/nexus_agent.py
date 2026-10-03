@@ -48,7 +48,7 @@ from pydantic import BaseModel
 # Bumped whenever the tool surface changes. The web UI compares this against the
 # tools it expects so a stale, still-running agent is reported as such instead of
 # surfacing bare 404s.
-AGENT_VERSION = "2026.10.03"
+AGENT_VERSION = "2026.10.04"
 
 # Phone tools this build exposes (used by /health and diagnostics). Every phone
 # action goes through the NEXUS Android Agent app over the tailnet link.
@@ -730,6 +730,10 @@ def _match_desktop_target(text: str, nth: int = 0):
     return matches[max(0, min(nth, len(matches) - 1))]
 
 app = FastAPI(title="NEXUS Local Agent")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ufo_desktop import ufo_router, ufo_tool_router, UFO_ENDPOINTS  # noqa: E402
+app.include_router(ufo_router)
+app.include_router(ufo_tool_router)
 
 # CORS — allow the web UI to call us from any origin (you control the browser).
 app.add_middleware(
@@ -827,6 +831,7 @@ def health():
         "release": platform.release(),
         "agent_version": AGENT_VERSION,
         "android": ANDROID_TOOLS,
+        "ufo": UFO_ENDPOINTS,
         "tools": sorted(
             r.path[len("/tool/"):]
             for r in app.routes
