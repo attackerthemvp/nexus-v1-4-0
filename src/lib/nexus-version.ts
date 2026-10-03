@@ -1,5 +1,5 @@
 /** Build/version identity surfaced in Settings → Advanced. */
-export const NEXUS_VERSION = "1.0.0";
+export const NEXUS_VERSION = "1.4.0";
 
 /** Short build stamp — the mode Vite built this bundle in. */
 export const NEXUS_BUILD =

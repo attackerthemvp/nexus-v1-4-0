@@ -34,6 +34,19 @@ describe("android request router", () => {
     expect(routeDeterministic("open vscode on my pc")).toBe("NORMAL");
     expect(parseRouterReply("ambiguous")).toBe("AMBIGUOUS");
   });
+  it("keeps desktop references on the PC", () => {
+    expect(routeDeterministic("In this exact Chrome tab you have to open Spotify.")).toBe("NORMAL");
+    expect(routeDeterministic("In this exact Chrome tab open Spotify", "android")).toBe("NORMAL");
+    expect(routeDeterministic("click play in this window")).toBe("NORMAL");
+    expect(routeDeterministic("what's on my screen")).toBe("NORMAL");
+    expect(routeDeterministic("open spotify")).not.toBe("ANDROID");
+    expect(routeDeterministic("open chrome")).not.toBe("ANDROID");
+  });
+  it("uses device continuity", () => {
+    expect(routeDeterministic("now open spotify", "pc")).toBe("NORMAL");
+    expect(routeDeterministic("Now do that on my phone", "pc")).toBe("ANDROID");
+    expect(routeDeterministic("open spotify", "android")).toBe("ANDROID");
+  });
 });
 
 describe("capability negotiation", () => {
@@ -99,7 +112,8 @@ describe("zero-ADB audit", () => {
     const bad: string[] = [];
     for (const f of files) {
       const src = readFileSync(f, "utf8");
-      if (/name:\s*"(device_(tap|type_text|keyevent|screenshot|connect|status|info)|launch_app|android_capabilities|run_adb_command)"/.test(src)) bad.push(`${f}: ADB tool declared`);
+      // launch_app is the PC desktop launcher (not an ADB tool), so it is not listed here.
+      if (/name:\s*"(device_(tap|type_text|keyevent|screenshot|connect|status|info)|android_capabilities|run_adb_command)"/.test(src)) bad.push(`${f}: ADB tool declared`);
       if (/fall ?back to ADB|ADB is LEGACY|adb shell|force_adb/i.test(src)) bad.push(`${f}: ADB fallback language`);
     }
     expect(bad).toEqual([]);
