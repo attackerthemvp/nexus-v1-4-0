@@ -112,7 +112,8 @@ describe("zero-ADB audit", () => {
     const bad: string[] = [];
     for (const f of files) {
       const src = readFileSync(f, "utf8");
-      if (/name:\s*"(device_(tap|type_text|keyevent|screenshot|connect|status|info)|launch_app|android_capabilities|run_adb_command)"/.test(src)) bad.push(`${f}: ADB tool declared`);
+      // launch_app is the PC desktop launcher (not an ADB tool), so it is not listed here.
+      if (/name:\s*"(device_(tap|type_text|keyevent|screenshot|connect|status|info)|android_capabilities|run_adb_command)"/.test(src)) bad.push(`${f}: ADB tool declared`);
       if (/fall ?back to ADB|ADB is LEGACY|adb shell|force_adb/i.test(src)) bad.push(`${f}: ADB fallback language`);
     }
     expect(bad).toEqual([]);
