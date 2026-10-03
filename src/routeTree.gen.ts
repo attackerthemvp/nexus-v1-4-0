@@ -10,33 +10,128 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DevicesRouteImport } from './routes/devices'
+import { Route as ProviderHealthRouteImport } from './routes/provider-health'
+import { Route as ApiAiStatusRouteImport } from './routes/api/ai-status'
+import { Route as ApiArtemisLlmRouteImport } from './routes/api/artemis-llm'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiWebsearchRouteImport } from './routes/api/websearch'
+import { Route as ChatChatIdRouteImport } from './routes/chat.$chatId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevicesRoute = DevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProviderHealthRoute = ProviderHealthRouteImport.update({
+  id: '/provider-health',
+  path: '/provider-health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiStatusRoute = ApiAiStatusRouteImport.update({
+  id: '/api/ai-status',
+  path: '/api/ai-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiArtemisLlmRoute = ApiArtemisLlmRouteImport.update({
+  id: '/api/artemis-llm',
+  path: '/api/artemis-llm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebsearchRoute = ApiWebsearchRouteImport.update({
+  id: '/api/websearch',
+  path: '/api/websearch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatChatIdRoute = ChatChatIdRouteImport.update({
+  id: '/chat/$chatId',
+  path: '/chat/$chatId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/devices': typeof DevicesRoute
+  '/provider-health': typeof ProviderHealthRoute
+  '/api/ai-status': typeof ApiAiStatusRoute
+  '/api/artemis-llm': typeof ApiArtemisLlmRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/websearch': typeof ApiWebsearchRoute
+  '/chat/$chatId': typeof ChatChatIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/devices': typeof DevicesRoute
+  '/provider-health': typeof ProviderHealthRoute
+  '/api/ai-status': typeof ApiAiStatusRoute
+  '/api/artemis-llm': typeof ApiArtemisLlmRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/websearch': typeof ApiWebsearchRoute
+  '/chat/$chatId': typeof ChatChatIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/devices': typeof DevicesRoute
+  '/provider-health': typeof ProviderHealthRoute
+  '/api/ai-status': typeof ApiAiStatusRoute
+  '/api/artemis-llm': typeof ApiArtemisLlmRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/websearch': typeof ApiWebsearchRoute
+  '/chat/$chatId': typeof ChatChatIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/devices'
+    | '/provider-health'
+    | '/api/ai-status'
+    | '/api/artemis-llm'
+    | '/api/chat'
+    | '/api/websearch'
+    | '/chat/$chatId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/devices'
+    | '/provider-health'
+    | '/api/ai-status'
+    | '/api/artemis-llm'
+    | '/api/chat'
+    | '/api/websearch'
+    | '/chat/$chatId'
+  id:
+    | '__root__'
+    | '/'
+    | '/devices'
+    | '/provider-health'
+    | '/api/ai-status'
+    | '/api/artemis-llm'
+    | '/api/chat'
+    | '/api/websearch'
+    | '/chat/$chatId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DevicesRoute: typeof DevicesRoute
+  ProviderHealthRoute: typeof ProviderHealthRoute
+  ApiAiStatusRoute: typeof ApiAiStatusRoute
+  ApiArtemisLlmRoute: typeof ApiArtemisLlmRoute
+  ApiChatRoute: typeof ApiChatRoute
+  ApiWebsearchRoute: typeof ApiWebsearchRoute
+  ChatChatIdRoute: typeof ChatChatIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +143,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/devices': {
+      id: '/devices'
+      path: '/devices'
+      fullPath: '/devices'
+      preLoaderRoute: typeof DevicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/provider-health': {
+      id: '/provider-health'
+      path: '/provider-health'
+      fullPath: '/provider-health'
+      preLoaderRoute: typeof ProviderHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai-status': {
+      id: '/api/ai-status'
+      path: '/api/ai-status'
+      fullPath: '/api/ai-status'
+      preLoaderRoute: typeof ApiAiStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/artemis-llm': {
+      id: '/api/artemis-llm'
+      path: '/api/artemis-llm'
+      fullPath: '/api/artemis-llm'
+      preLoaderRoute: typeof ApiArtemisLlmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/websearch': {
+      id: '/api/websearch'
+      path: '/api/websearch'
+      fullPath: '/api/websearch'
+      preLoaderRoute: typeof ApiWebsearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/$chatId': {
+      id: '/chat/$chatId'
+      path: '/chat/$chatId'
+      fullPath: '/chat/$chatId'
+      preLoaderRoute: typeof ChatChatIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DevicesRoute: DevicesRoute,
+  ProviderHealthRoute: ProviderHealthRoute,
+  ApiAiStatusRoute: ApiAiStatusRoute,
+  ApiArtemisLlmRoute: ApiArtemisLlmRoute,
+  ApiChatRoute: ApiChatRoute,
+  ApiWebsearchRoute: ApiWebsearchRoute,
+  ChatChatIdRoute: ChatChatIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
