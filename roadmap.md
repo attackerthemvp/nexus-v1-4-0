@@ -8,3 +8,4 @@
 - [ ] Remove ADB tools/rules; zero-ADB audit test
 - [ ] docs/artemis-port.md, Android app prompt file, local-agent patch
 - [ ] Later rounds: deeper ports (explorer/perception, flash context compressor, memory chunking, validator full taxonomy)
+- [x] v1.4.0 UFO hybrid desktop control (ufo_desktop.py, ufo_* tools) + PC/Android device continuity fix

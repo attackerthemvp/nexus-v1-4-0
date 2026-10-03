@@ -11,3 +11,5 @@
 
 ## Desktop automation (local agent)
 - Desktop control lives in local-agent/nexus_agent.py: launch_app (already-running → Desktop → Desktop\Others → validated Windows search, all paths from %USERPROFILE%), idempotent show_desktop, double-click support, per-action window focusing, fast desktop_read (OCR opt-in). Desktop tests are mock-only in local-agent/test_desktop_actions.py — never touch real input devices in tests.
+- In-app UI grounding lives in local-agent/ufo_desktop.py (UIA control tree → numbered IDs → verified-centre clicks, 0-1000 grid fallback), mounted via APIRouter with /tool/ufo_* aliases; keep it out of nexus_agent.py so the agent file stays small.
+- Android routing uses device continuity (last active device) and demonstrative PC guards in src/lib/artemis/request-router.ts; app names alone never imply Android, so cross-platform apps don't hijack PC tasks.
