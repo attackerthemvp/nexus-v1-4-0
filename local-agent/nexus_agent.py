@@ -731,7 +731,7 @@ def _match_desktop_target(text: str, nth: int = 0):
 
 app = FastAPI(title="NEXUS Local Agent")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ufo_desktop import ufo_router, ufo_tool_router, UFO_ENDPOINTS  # noqa: E402
+from ufo_desktop import ufo_router, ufo_tool_router, UFO_ENDPOINTS, UFO_TOOLS  # noqa: E402
 app.include_router(ufo_router)
 app.include_router(ufo_tool_router)
 
@@ -833,9 +833,12 @@ def health():
         "android": ANDROID_TOOLS,
         "ufo": UFO_ENDPOINTS,
         "tools": sorted(
-            r.path[len("/tool/"):]
-            for r in app.routes
-            if getattr(r, "path", "").startswith("/tool/")
+            {
+                r.path[len("/tool/"):]
+                for r in app.routes
+                if getattr(r, "path", "").startswith("/tool/")
+            }
+            | set(UFO_TOOLS)
         ),
     }
 
