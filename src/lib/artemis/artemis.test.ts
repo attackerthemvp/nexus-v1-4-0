@@ -34,6 +34,19 @@ describe("android request router", () => {
     expect(routeDeterministic("open vscode on my pc")).toBe("NORMAL");
     expect(parseRouterReply("ambiguous")).toBe("AMBIGUOUS");
   });
+  it("keeps desktop references on the PC", () => {
+    expect(routeDeterministic("In this exact Chrome tab you have to open Spotify.")).toBe("NORMAL");
+    expect(routeDeterministic("In this exact Chrome tab open Spotify", "android")).toBe("NORMAL");
+    expect(routeDeterministic("click play in this window")).toBe("NORMAL");
+    expect(routeDeterministic("what's on my screen")).toBe("NORMAL");
+    expect(routeDeterministic("open spotify")).not.toBe("ANDROID");
+    expect(routeDeterministic("open chrome")).not.toBe("ANDROID");
+  });
+  it("uses device continuity", () => {
+    expect(routeDeterministic("now open spotify", "pc")).toBe("NORMAL");
+    expect(routeDeterministic("Now do that on my phone", "pc")).toBe("ANDROID");
+    expect(routeDeterministic("open spotify", "android")).toBe("ANDROID");
+  });
 });
 
 describe("capability negotiation", () => {

@@ -23,7 +23,8 @@ import { runArtemis } from "@/lib/artemis/engine";
 import { createClientLLM } from "@/lib/artemis/client-llm";
 import { markTarget } from "@/lib/artemis/mark-target";
 import { getArtemisMode, setArtemisMode, useArtemisMode } from "@/lib/artemis/mode-store";
-import { routeRequest } from "@/lib/artemis/request-router";
+import { routeRequest, type ActiveDevice } from "@/lib/artemis/request-router";
+import { toolCategory } from "@/lib/tool-policy";
 import type { ArtemisEvent, ConfirmRequest } from "@/lib/artemis/types";
 import { Zap, Brain } from "lucide-react";
 import { executeMemoryTool, isMemoryTool } from "@/lib/memory-tools";
@@ -82,6 +83,8 @@ export function JarvisChat({
   const [busy, setBusy] = useState(false);
   const [agentOnline, setAgentOnline] = useState(false);
   const agentOnlineRef = useRef(false);
+  // Device continuity: follow-ups stay on the device last inspected/controlled.
+  const lastActiveDeviceRef = useRef<ActiveDevice>(null);
   const [thinking, setThinking] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
@@ -388,13 +391,14 @@ export function JarvisChat({
             [],
           );
           return r.text;
-        });
+        }, lastActiveDeviceRef.current);
         logAgent({ kind: "status", label: "android-router", detail: `${route.decision} (${route.via})` });
         if (route.decision === "AMBIGUOUS") {
           say("Should I do this **on your phone** (Android control), or just answer / handle it here? Reply \"on my phone\" to let me control it.");
           handled = true;
         }
         if (route.decision === "ANDROID") {
+          lastActiveDeviceRef.current = "android";
           setThinking(`Artemis (${getArtemisMode().toUpperCase()}) is controlling your phone…`);
           const out = await runPhoneTask(text, ctrl.signal);
           const [outcome, ...rest] = out.split(": ");
@@ -427,6 +431,8 @@ export function JarvisChat({
           checkCompletion: checkAndroidCompletion,
 
           executeTool: async (fname, args): Promise<ToolExecution> => {
+            if (fname === "phone_task" || /^(phone_|android_|device_)/.test(fname)) lastActiveDeviceRef.current = "android";
+            else if (fname === "launch_app" || ["desktop", "browser"].includes(toolCategory(fname))) lastActiveDeviceRef.current = "pc";
             if (fname === "phone_task") {
               const goal = typeof args["goal"] === "string" ? args["goal"] : text;
               const out = await runPhoneTask(goal, ctrl.signal);
