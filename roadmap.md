@@ -1,0 +1,10 @@
+# NEXUS roadmap — Artemis port (working core first)
+- [ ] Copy upstream Artemis prompt assets (Flash, Planner, Operator, Checker, Safety Net) with Apache notice
+- [ ] TS Artemis engine: Flash loop + Pro (Planner→Operator→Validator→Checker), events, confirm, cancel
+- [ ] LLM adapter server fn over routeChat (mode never changes on failover)
+- [ ] Zero-ADB Android actuator over local agent → phone app, capability-gated
+- [ ] Android request router (NORMAL/ANDROID/AMBIGUOUS) + phone_task(goal, mode)
+- [ ] Flash/Pro switch in composer + live Artemis controller (Confirm/Abort/Stop)
+- [ ] Remove ADB tools/rules; zero-ADB audit test
+- [ ] docs/artemis-port.md, Android app prompt file, local-agent patch
+- [ ] Later rounds: deeper ports (explorer/perception, flash context compressor, memory chunking, validator full taxonomy)

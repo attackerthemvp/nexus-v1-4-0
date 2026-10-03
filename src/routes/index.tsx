@@ -1,24 +1,43 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { resolveStartupChatId } from "@/lib/chat-store";
+import { ArcReactor } from "@/components/ArcReactor";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "NEXUS — Neural Executive eXchange Utility System" },
+      {
+        name: "description",
+        content:
+          "NEXUS OS — an AI assistant that controls your computer through a local helper agent.",
+      },
+      { property: "og:title", content: "NEXUS — Neural Executive eXchange Utility System" },
+      {
+        property: "og:description",
+        content: "Your personal AI computer assistant.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const id = resolveStartupChatId();
+    navigate({ to: "/chat/$chatId", params: { chatId: id }, replace: true });
+  }, [navigate]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex h-screen flex-col items-center justify-center gap-4">
+      <ArcReactor active size={72} />
+      <p className="font-display text-sm tracking-widest text-primary text-glow">
+        INITIALIZING NEXUS
+      </p>
     </div>
   );
 }
