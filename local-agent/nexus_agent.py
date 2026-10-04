@@ -1355,6 +1355,7 @@ class DesktopType(BaseModel):
     text: str
     submit: bool = False
     window: str | None = None
+    clear_first: bool = False
 
 
 class DesktopHotkey(BaseModel):
@@ -1401,6 +1402,15 @@ def _focus_if_requested(window: str | None):
             f"'{window}': {[m['title'] for m in tied]}. "
             "Pass a more specific window title.",
         )
+    # Already in front: re-focusing the top-level window would steal focus from the
+    # focused child input (text box), so typed text would vanish.
+    if IS_WIN:
+        try:
+            import ctypes
+            if int(ctypes.windll.user32.GetForegroundWindow()) == int(matches[0]["handle"]):  # type: ignore[attr-defined]
+                return
+        except Exception:
+            pass
     if not _focus_window(matches[0]["handle"]):
         raise HTTPException(500, f"Could not bring '{matches[0]['title']}' to the front. Action refused.")
 
@@ -1529,6 +1539,9 @@ def desktop_type(arg: DesktopType):
     pyautogui = _import_pyautogui()
     try:
         _focus_if_requested(arg.window)
+        if arg.clear_first:
+            pyautogui.hotkey("command" if IS_MAC else "ctrl", "a")
+            pyautogui.press("backspace")
         pyperclip = _import_pyperclip()
         if pyperclip:
             pyperclip.copy(arg.text)
