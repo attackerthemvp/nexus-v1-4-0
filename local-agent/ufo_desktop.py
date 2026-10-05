@@ -97,6 +97,7 @@ class ClickNormIn(BaseModel):
 
 _ACTIVE_CONTROLS: dict[int, UFOControlItem] = {}
 _ACTIVE_ELEMENTS: dict[int, tuple[Any, Any]] = {}   # id -> (control wrapper, app window)
+_ACTIVE_APP: Any = None
 _STATE: dict[str, Any] = {"window_title": None, "ts": 0.0}
 _LOCK = threading.Lock()
 
@@ -114,7 +115,12 @@ def _get_ufo():
         return ControlInspectorFacade("uia"), ControlReceiver
     except Exception as e:
         _STATE["ufo_error"] = f"{type(e).__name__}: {e}"
-        return None
+        raise HTTPException(
+            503,
+            "Microsoft UFO's Windows control packages are not installed. "
+            "Install local-agent/requirements-ufo.txt with this agent's Python, then restart it. "
+            f"Import detail: {type(e).__name__}: {e}",
+        ) from e
 
 
 def _get_desktop():
@@ -201,6 +207,7 @@ class UFOControlExtractor:
         self.screen = screen
         self.foreground = foreground
         self.elements: list[tuple[Any, Any]] = []
+        self.active_window = None
 
     # -- window resolution ------------------------------------------------------------
     def _top_windows(self) -> list:
@@ -292,6 +299,7 @@ class UFOControlExtractor:
             return None, []
         windows = self._top_windows()
         main = self.foreground_window(windows)
+        self.active_window = main
         seen: set = set()
         raw: list[tuple] = []
         for p in self.popups(windows, main):           # popups FIRST
@@ -339,11 +347,13 @@ def refresh_controls() -> dict:
     else:
         ext = UFOControlExtractor(_get_desktop(), screen, _foreground_handle())
     title, items = ext.extract()
+    global _ACTIVE_APP
     with _LOCK:
         _ACTIVE_CONTROLS.clear()
         _ACTIVE_CONTROLS.update({c.id: c for c in items})
         _ACTIVE_ELEMENTS.clear()
         _ACTIVE_ELEMENTS.update({c.id: e for c, e in zip(items, ext.elements)})
+        _ACTIVE_APP = ext.active_window
         _STATE["window_title"] = title
         _STATE["ts"] = time.time()
     return _compact(title, items)
@@ -473,7 +483,15 @@ def keyboard_input(arg: KeyboardInputIn) -> dict:
         if _ufo_error(res):
             raise HTTPException(500, f"UFO keyboard input failed: {res[:300]}")
     else:
-        _send_keys(arg.keys)                            # foreground window, e.g. "%c" (Alt+C)
+        with _LOCK:
+            app = _ACTIVE_APP
+        rec = _receiver(None, app) if app is not None else None
+        if rec is not None:
+            res = rec.keyboard_input({"keys": arg.keys, "control_focus": False})
+            if _ufo_error(res):
+                raise HTTPException(500, f"UFO keyboard input failed: {res[:300]}")
+        else:
+            _send_keys(arg.keys)                        # foreground shortcut, e.g. "%c" (Alt+C)
     return _after_action({"keys": arg.keys, "control_id": arg.control_id})
 
 
