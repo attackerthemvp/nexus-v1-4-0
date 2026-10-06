@@ -225,6 +225,19 @@ class UFOControlExtractor:
             for w in windows:
                 if _info(w, "handle", None) == fg:
                     return w
+            # Win32 HMENU popups are separate HWNDs; resolve the foreground popup back to
+            # its root owner so popup controls and their parent app are both retained.
+            if IS_WIN:
+                try:
+                    import ctypes
+                    owner = int(ctypes.windll.user32.GetAncestor(fg, 3))  # GA_ROOTOWNER
+                    for w in windows:
+                        if owner and _info(w, "handle", None) == owner:
+                            return w
+                except Exception:
+                    pass
+            # Never guess another window when the OS gave us an unmatched foreground HWND.
+            return None
         for w in windows:
             if _call(w, "has_keyboard_focus", False) or _call(w, "is_active", False):
                 return w
@@ -269,9 +282,12 @@ class UFOControlExtractor:
     def _nodes(self, root) -> list:
         if self.inspector is not None:
             # UFO: one cached FindAll with an enabled/on-screen/control-type COM condition.
+            # Use the backend strategy directly because the public facade drops unnamed
+            # Edit controls, which can still be valid input fields in real applications.
             try:
-                return list(self.inspector.find_control_elements_in_descendants(
-                    root, control_type_list=sorted(UIA_QUERY_TYPES)))
+                return list(self.inspector.backend_strategy.find_control_elements_in_descendants(
+                    root, control_type_list=sorted(UIA_QUERY_TYPES),
+                    is_visible=True, is_enabled=True))
             except Exception:
                 return []
         try:
@@ -427,8 +443,12 @@ def click_control(arg: ClickControlIn) -> dict:
     rec = _receiver(el, app)
     via = "ufo.click_input"
     if rec is not None:
-        res = rec.click_input({"button": "right" if arg.click_type == "right" else "left",
-                               "double": arg.click_type == "double"})
+        # Keep UFO's click API parameters but inspect atomic_execution's result: the
+        # upstream convenience wrapper currently discards that result on failure.
+        res = rec.atomic_execution("click_input", {
+            "button": "right" if arg.click_type == "right" else "left",
+            "double": arg.click_type == "double",
+        })
         if _ufo_error(res):
             raise HTTPException(500, f"UFO click failed on control {c.id}: {res[:300]}")
     else:
@@ -502,6 +522,8 @@ def click_norm(arg: ClickNormIn) -> dict:
     with _LOCK:
         _ACTIVE_CONTROLS.clear()
         _ACTIVE_ELEMENTS.clear()
+        global _ACTIVE_APP
+        _ACTIVE_APP = None
     return {"ok": True, "point": [x, y], "screen": [w, h], "click_type": arg.click_type,
             "note": "Control IDs invalidated — call ufo_get_controls before using IDs again."}
 

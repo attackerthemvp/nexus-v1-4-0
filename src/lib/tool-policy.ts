@@ -122,7 +122,6 @@ const REPEAT_SAFE_TOOLS = new Set([
   "desktop_screenshot",
   "show_desktop",
   "ufo_get_controls",
-  "ufo_get_controls",
   "list_windows",
   "browser_read",
   "system_info",
