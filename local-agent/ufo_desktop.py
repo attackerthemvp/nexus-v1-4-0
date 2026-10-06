@@ -502,6 +502,8 @@ def click_norm(arg: ClickNormIn) -> dict:
     with _LOCK:
         _ACTIVE_CONTROLS.clear()
         _ACTIVE_ELEMENTS.clear()
+        global _ACTIVE_APP
+        _ACTIVE_APP = None
     return {"ok": True, "point": [x, y], "screen": [w, h], "click_type": arg.click_type,
             "note": "Control IDs invalidated — call ufo_get_controls before using IDs again."}
 
