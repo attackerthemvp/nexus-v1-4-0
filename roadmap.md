@@ -1,4 +1,5 @@
 # NEXUS roadmap — Artemis port (working core first)
+- [x] Replace the simulated UFO helper with Microsoft UFO's vendored MIT-licensed inspector/controller; connect inspect, click, type and keyboard tools without modifying Artemis
 - [ ] Copy upstream Artemis prompt assets (Flash, Planner, Operator, Checker, Safety Net) with Apache notice
 - [ ] TS Artemis engine: Flash loop + Pro (Planner→Operator→Validator→Checker), events, confirm, cancel
 - [ ] LLM adapter server fn over routeChat (mode never changes on failover)
