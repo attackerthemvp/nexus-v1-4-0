@@ -23,6 +23,8 @@ class El:
         self._rect = rect
         self._children = list(children)
         self._visible, self._enabled, self._active = visible, enabled, active
+        self.actions = []
+        self.text_value = ""
 
     def rectangle(self):
         l, t, r, b = self._rect
@@ -40,6 +42,37 @@ class El:
     def is_active(self): return self._active
     def has_keyboard_focus(self): return False
     def window_text(self): return self.element_info.name
+    def click_input(self, **kwargs): self.actions.append(("click_input", kwargs))
+    def set_edit_text(self, text): self.text_value = text; self.actions.append(("set_edit_text", text))
+    def type_keys(self, keys, **kwargs): self.actions.append(("type_keys", keys))
+
+
+class FakeUfoStrategy:
+    def __init__(self, windows): self.windows = windows
+    def get_desktop_windows(self, remove_empty=False): return self.windows
+    def find_control_elements_in_descendants(self, root, **kwargs): return root.descendants()
+
+
+class FakeUfoFacade:
+    def __init__(self, windows): self.backend_strategy = FakeUfoStrategy(windows)
+    def get_desktop_windows(self, remove_empty=False):
+        return self.backend_strategy.get_desktop_windows(remove_empty)
+
+
+class FakeUfoReceiver:
+    """Exercise the UFO adapter boundary without importing Windows UIA or sending input."""
+    def __init__(self, control, application): self.control, self.application = control, application
+    def atomic_execution(self, method_name, params):
+        return getattr(self.control, method_name)(**params)
+    def set_edit_text(self, params):
+        self.control.set_edit_text(params["text"])
+        return "text set"
+    def keyboard_input(self, params):
+        if self.control is not None:
+            self.control.type_keys(params["keys"])
+        elif self.application is not None:
+            self.application.actions.append(("keyboard_input", params["keys"]))
+        return params["keys"]
 
 
 class FakeDesktop:
@@ -105,6 +138,8 @@ def reset(monkeypatch):
     monkeypatch.setattr(na, "AGENT_TOKEN", "")
     monkeypatch.setattr(ufo.time, "sleep", lambda s: None)
     ufo._ACTIVE_CONTROLS.clear()
+    ufo._ACTIVE_ELEMENTS.clear()
+    ufo._ACTIVE_APP = None
     yield
 
 
@@ -208,6 +243,36 @@ def test_click_reveals_popup_and_regenerates_ids(monkeypatch, gui, client):
 def test_unknown_id_never_guesses(monkeypatch, gui, client):
     use(monkeypatch, [win32_app()], 100)
     assert client.post("/ufo/click_control", json={"control_id": 3}).status_code == 404
+    assert gui.calls == []
+
+
+def test_vendored_ufo_receiver_clicks_actual_element(monkeypatch, gui, client):
+    app = win32_app()
+    use(monkeypatch, [app], 100)
+    monkeypatch.setattr(ufo, "_get_ufo", lambda: (FakeUfoFacade([app]), FakeUfoReceiver))
+    data = client.get("/ufo/controls").json()
+    assert data["engine"] == "microsoft-ufo"
+    result = client.post("/ufo/click_control", json={"control_id": 5}).json()
+    button = next(el for el in app.descendants()
+                  if el.element_info.control_type == "Button" and el.element_info.name == "Open")
+    assert button.actions == [("click_input", {"button": "left", "double": False})]
+    assert result["clicked"]["via"] == "ufo.click_input"
+    assert gui.calls == []
+
+
+def test_vendored_ufo_receiver_types_into_exact_edit(monkeypatch, gui, client):
+    app = win32_app()
+    edit = next(el for el in app.descendants()
+                if el.element_info.control_type == "Edit" and el.element_info.name == "Host Name")
+    use(monkeypatch, [app], 100)
+    monkeypatch.setattr(ufo, "_get_ufo", lambda: (FakeUfoFacade([app]), FakeUfoReceiver))
+    client.get("/ufo/controls")
+    result = client.post("/ufo/type_into_control", json={
+        "control_id": 4, "text": "192.168.1.8", "clear_first": True,
+    }).json()
+    assert edit.text_value == "192.168.1.8"
+    assert edit.actions == [("set_edit_text", "192.168.1.8")]
+    assert result["typed"]["via"] == "ufo.set_edit_text"
     assert gui.calls == []
 
 
