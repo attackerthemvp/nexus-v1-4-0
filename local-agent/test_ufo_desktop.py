@@ -253,7 +253,8 @@ def test_vendored_ufo_receiver_clicks_actual_element(monkeypatch, gui, client):
     data = client.get("/ufo/controls").json()
     assert data["engine"] == "microsoft-ufo"
     result = client.post("/ufo/click_control", json={"control_id": 5}).json()
-    button = app.descendants()[-1]
+    button = next(el for el in app.descendants()
+                  if el.element_info.control_type == "Button" and el.element_info.name == "Open")
     assert button.actions == [("click_input", {"button": "left", "double": False})]
     assert result["clicked"]["via"] == "ufo.click_input"
     assert gui.calls == []
@@ -261,7 +262,8 @@ def test_vendored_ufo_receiver_clicks_actual_element(monkeypatch, gui, client):
 
 def test_vendored_ufo_receiver_types_into_exact_edit(monkeypatch, gui, client):
     app = win32_app()
-    edit = app.descendants()[3]
+    edit = next(el for el in app.descendants()
+                if el.element_info.control_type == "Edit" and el.element_info.name == "Host Name")
     use(monkeypatch, [app], 100)
     monkeypatch.setattr(ufo, "_get_ufo", lambda: (FakeUfoFacade([app]), FakeUfoReceiver))
     client.get("/ufo/controls")
